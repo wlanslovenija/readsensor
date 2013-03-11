@@ -46,7 +46,7 @@ int main(int argc, char **argv)
   unsigned short timeout = 100;
   
   char c;
-  while ((c = getopt(argc, argv, "hi:d:s:")) != EOF) {
+  while ((c = getopt(argc, argv, "hi:d:s:t:")) != EOF) {
     switch (c) {
       case 'h': {
         show_help(argv[0]);
