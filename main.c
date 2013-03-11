@@ -86,15 +86,15 @@ int main(int argc, char **argv)
   char buffer[1024] = {0,};
   
   if (aset != NULL) {
-    // Send ASET command instead of AGET
-    if (fprintf(serial, "ASET /%s %s\n", sensor_id, aset) < 0) {
+    // Send write command instead of read
+    if (fprintf(serial, "ACOM /%s %s\n", sensor_id, aset) < 0) {
       fprintf(stderr, "ERROR: Failed to send ASET %s command!\n", aset);
       fclose(serial);
       return 3;
     }
   } else {
-    // Send AGET command
-    if (fprintf(serial, "AGET /%s\n", sensor_id) < 0) {
+    // Send read command
+    if (fprintf(serial, "ACOM /%s\n", sensor_id) < 0) {
       fprintf(stderr, "ERROR: Failed to send AGET command!\n");
       fclose(serial);
       return 3;
