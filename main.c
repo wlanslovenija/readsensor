@@ -24,6 +24,7 @@
 #include <sys/types.h>
 #include <errno.h>
 #include <time.h>
+#include <termios.h>
 
 void show_help(const char *app)
 {
@@ -32,6 +33,7 @@ void show_help(const char *app)
     "       -h         this text\n"
     "       -i sensor  sensor identifier\n"
     "       -d device  serial device\n"
+    "       -b rate    device baudrate (default = 115200)\n"
     "       -t timeout wanted timeout in ms (default = 100ms)\n"
     "       -s value   write value to sensor\n"
   );
@@ -44,9 +46,10 @@ int main(int argc, char **argv)
   char *device = NULL;
   char *aset = NULL;
   unsigned short timeout = 100;
+  unsigned int baudrate = 115200;
   
   char c;
-  while ((c = getopt(argc, argv, "hi:d:s:t:")) != EOF) {
+  while ((c = getopt(argc, argv, "hi:d:s:t:b:")) != EOF) {
     switch (c) {
       case 'h': {
         show_help(argv[0]);
@@ -56,6 +59,7 @@ int main(int argc, char **argv)
       case 'd': device = strdup(optarg); break;
       case 's': aset = strdup(optarg); break;
       case 't': timeout = atoi(optarg); break;
+      case 'b': baudrate = atoi(optarg); break;
       default: {
         fprintf(stderr, "ERROR: Invalid option %c!\n", c);
         show_help(argv[0]);
@@ -80,6 +84,23 @@ int main(int argc, char **argv)
   int serial_fd = fileno(serial);
   if (fcntl(serial_fd, F_SETFL, O_NONBLOCK) < 0) {
     fprintf(stderr, "ERROR: Failed to setup the serial device!\n");
+    return 2;
+  }
+  
+  // Configure the serial device
+  struct termios tio;
+  if (tcgetattr(serial_fd, &tio) < 0) {
+    fprintf(stderr, "ERROR: Failed to configure the serial device!\n");
+    return 2;
+  }
+  
+  // Configure for RAW I/O and setup baudrate
+  cfmakeraw(&tio);
+  cfsetispeed(&tio, baudrate);
+  cfsetospeed(&tio, baudrate);
+  
+  if (tcsetattr(serial_fd, TCSAFLUSH, &tio) < 0) {
+    fprintf(stderr, "ERROR: Failed to configure the serial device!\n");
     return 2;
   }
   
